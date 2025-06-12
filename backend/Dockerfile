@@ -20,10 +20,6 @@ WORKDIR /app/frontend
 RUN npm install
 RUN npm run build
 
-# Move build output to backend for static serving
-RUN mkdir -p /app/frontend/dist && \
-    cp -r dist/* /app/frontend/dist
-
 # Switch back to backend working directory
 WORKDIR /app/backend
 
