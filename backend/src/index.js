@@ -12,15 +12,18 @@ import { app, server } from "./lib/socket.js";
 
 dotenv.config();
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
+
+// Fix __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Middlewares
 app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "http://localhost:5173", // Adjust if your frontend is deployed elsewhere
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
     credentials: true,
   })
 );
@@ -29,7 +32,7 @@ app.use(
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
-// Serve frontend in production
+// Serve frontend build
 if (process.env.NODE_ENV === "production") {
   const frontendPath = path.resolve(__dirname, "../../frontend/dist");
   app.use(express.static(frontendPath));
@@ -40,6 +43,6 @@ if (process.env.NODE_ENV === "production") {
 }
 
 server.listen(PORT, () => {
-  console.log("Server is running on PORT: " + PORT);
+  console.log(`✅ Server running on port ${PORT}`);
   connectDB();
 });
