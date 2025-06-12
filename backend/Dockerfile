@@ -14,7 +14,7 @@ RUN npm install
 COPY ./backend/src ./src
 
 # Copy frontend dist (static build)
-COPY ./frontend/dist ./frontend-dist
+COPY ../frontend/dist ./frontend-dist
 
 # Expose backend port
 EXPOSE 5000
