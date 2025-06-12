@@ -1,30 +1,23 @@
-# Use Node.js v18 base image
+# Use Node base image
 FROM node:18
 
-# Set root working directory
-WORKDIR /app
-
-# Copy backend package files first for optimized layer caching
-COPY ./backend/package*.json ./backend/
-
-# Set working directory for backend and install dependencies
-WORKDIR /app/backend
-RUN npm install
-
-# Go back to root and copy everything (backend + frontend)
-WORKDIR /app
-COPY . .
-
-# Build React frontend
-WORKDIR /app/frontend
-RUN npm install
-RUN npm run build
-
-# Switch back to backend working directory
+# Set working directory inside container
 WORKDIR /app/backend
 
-# Expose backend server port
+# Copy backend package files
+COPY ./backend/package*.json ./
+
+# Install backend dependencies
+RUN npm install
+
+# Copy backend source code
+COPY ./backend/src ./src
+
+# Copy frontend dist (static build)
+COPY ./frontend/dist ./frontend-dist
+
+# Expose backend port
 EXPOSE 5000
 
-# Start the server
-CMD ["npm", "start"]
+# Start backend server
+CMD ["node", "src/index.js"]
