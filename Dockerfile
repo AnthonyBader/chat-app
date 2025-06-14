@@ -1,25 +1,25 @@
-# Use Node as base
 FROM node:18
 
-# Set working directory
 WORKDIR /app
 
-# Install backend dependencies
+# Copy package files
 COPY backend/package*.json ./backend/
+COPY frontend/package*.json ./frontend/
+
+# Install dependencies
+RUN npm install --prefix ./frontend
 RUN npm install --prefix ./backend
 
-# Install and build frontend
-COPY frontend/package*.json ./frontend/
-RUN npm install --prefix ./frontend
+# Copy and build frontend
 COPY frontend ./frontend
 RUN npm run build --prefix ./frontend
 
-# Copy backend and frontend build
+# Copy backend source
 COPY backend/src ./backend/src
-COPY frontend/dist ./frontend-dist
 
-# Expose port (adjust if needed)
+# ✅ Now copy the built frontend
+COPY ./frontend/dist ./frontend-dist
+
 EXPOSE 5000
 
-# Start backend
 CMD ["npm", "start", "--prefix", "./backend"]
