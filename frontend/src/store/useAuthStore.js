@@ -15,17 +15,25 @@ export const useAuthStore = create((set, get) => ({
   socket: null,
 
   checkAuth: async () => {
-    try {
-      const res = await axiosInstance.get("/auth/check");
+  try {
+    const res = await axiosInstance.get("/auth/check");
 
+    // Check if res.data is an object, not a string (which would be HTML)
+    if (res.data && typeof res.data === "object" && !Array.isArray(res.data)) {
       set({ authUser: res.data });
       get().connectSocket();
-    } catch (error) {
-      console.log("Error in checkAuth:", error);
+    } else {
+      // Unexpected response (probably HTML)
       set({ authUser: null });
-    } finally {
-      set({ isCheckingAuth: false });
+      console.warn("Unexpected auth check response:", res.data);
     }
+  } catch (error) {
+    console.log("Error in checkAuth:", error);
+    set({ authUser: null });
+  } finally {
+    set({ isCheckingAuth: false });
+  }
+
   },
 
   signup: async (data) => {

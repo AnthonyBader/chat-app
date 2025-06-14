@@ -1,14 +1,9 @@
 import express from "express";
-import { fileURLToPath } from "url";
 import path from "path";
+import { fileURLToPath } from "url";
+import fs from "fs";
 import dotenv from "dotenv";
-import cookieParser from "cookie-parser";
-import cors from "cors";
-
 import { connectDB } from "./lib/db.js";
-import authRoutes from "./routes/auth.route.js";
-import messageRoutes from "./routes/message.route.js";
-import { server } from "./lib/socket.js";
 
 dotenv.config();
 
@@ -16,38 +11,39 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:5173", // update this as needed
-  credentials: true,
-}));
+// Middleware to parse JSON bodies
 app.use(express.json());
-app.use(cookieParser());
 
-// API routes
-app.use("/api/auth", authRoutes);
-app.use("/api/messages", messageRoutes);
+// Register your API routes here
+app.use("/api/auth", (await import("./routes/auth.route.js")).default);
+app.use("/api/users", (await import("./routes/auth.route.js")).default);
 
-// Serve React frontend build folder
-// In production serve frontend-dist from backend folder
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../frontend-dist")));
+const frontendPath = path.join(__dirname, "../../frontend/dist");
 
-  // Catch all other routes and serve index.html
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend-dist/index.html"));
-  });
+// Check if frontend build exists
+if (!fs.existsSync(path.join(frontendPath, "index.html"))) {
+  console.error("❌ frontend/dist/index.html not found at:", frontendPath);
 } else {
-  // Dev fallback or just an example route
-  app.get('/api/hello', (req, res) => {
-    res.json({ message: 'Hello from backend in dev!' });
-  });
+  console.log("✅ frontend/dist/index.html found at:", frontendPath);
 }
 
-// Start your HTTP + socket server
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  connectDB();
+// Serve frontend static files
+app.use(express.static(frontendPath));
+
+// Serve index.html for all other routes (SPA fallback)
+app.get("*", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
+
+// Connect to MongoDB and start server
+connectDB()
+  .then(() => {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+      console.log(`✅ Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("❌ Failed to connect to MongoDB:", err);
+  });
