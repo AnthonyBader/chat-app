@@ -4,7 +4,8 @@ import { fileURLToPath } from "url";
 import fs from "fs";
 import dotenv from "dotenv";
 import { connectDB } from "./lib/db.js";
-
+import cookieParser from "cookie-parser";
+import authRoutes from "./routes/auth.route.js";
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -14,10 +15,9 @@ const app = express();
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+app.use(cookieParser());
 
-// Register your API routes here
-app.use("/api/auth", (await import("./routes/auth.route.js")).default);
-app.use("/api/users", (await import("./routes/auth.route.js")).default);
+app.use("/api/auth", authRoutes);
 
 const frontendPath = path.join(__dirname, "../../frontend/dist");
 
